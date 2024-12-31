@@ -1,3 +1,14 @@
+### Menu 1
+![Descrição da Foto 1](images/1.png)
+### Menu 2
+![Descrição da Foto 2](images/2.png)
+### Menu 3
+![Descrição da Foto 3](images/3.png)
+### Menu 4
+![Descrição da Foto 4](images/4.png)
+### Menu 5
+![Descrição da Foto 5](images/5.png)
+
 # AUploader Test Release by Alex Lseything
 
 This repository contains a Python script named `sender.py`, which performs a specific task. To ensure the script runs correctly, please follow the installation and execution steps below.
@@ -45,6 +56,7 @@ To install the required packages, run the following command:
 
 ```bash
 pip install requests
+pip install rich
 
 ## Running the Script
 
