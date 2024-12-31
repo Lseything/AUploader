@@ -1,9 +1,9 @@
-# AUploader Test Release by Alex Lseything
+# AUploader Release by Alex Lseything
 
 ### Menu 1
 ![Descrição da Foto 1](images/1.png)
 
-This repository contains a Python script named `sender.py`, which performs a specific task. To ensure the script runs correctly, please follow the installation and execution steps below.
+This repository contains a Python script named `AUploader.py`, which performs a specific task. To ensure the script runs correctly, please follow the installation and execution steps below.
 
 ## Prerequisites
 
@@ -59,4 +59,4 @@ Once Python 3 is installed, follow these steps to run the script:
 2. Open a terminal or command prompt and navigate to the directory where the script is located.
 3. Run the script using the following command:
    
-and type >> python3 sender.py
+and type >> python3 AUploader or double click >> AUploader.bat
