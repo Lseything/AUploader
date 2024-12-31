@@ -5,6 +5,11 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.box import ROUNDED
 from rich.prompt import Prompt
+from rich.table import Table
+from rich.text import Text
+from rich.layout import Layout
+import requests
+from datetime import datetime
 
 # Configurações
 console = Console()
@@ -17,6 +22,7 @@ INSTALL_PACKAGES_ASCII = """
 ███████ ██████  ███████ ██      █████   ███████ ██   ███ █████   ███████ 
 ██   ██ ██      ██   ██ ██      ██  ██  ██   ██ ██    ██ ██           ██ 
 ██   ██ ██      ██   ██  ██████ ██   ██ ██   ██  ██████  ███████ ███████ 
+=========================================================================
 [/bold rgb(0,255,255)]
 """
 
@@ -45,11 +51,6 @@ def install_packages():
 install_packages()
 
 # Resto do seu código (o original)
-import requests
-from datetime import datetime
-from rich.table import Table
-
-# Configurações
 LOG_FILE = "upload_log.txt"
 
 # Arte ASCII menor para "AUploader"
@@ -60,6 +61,7 @@ AUPLOADER_ASCII = """
 ███████ ██    ██ ██████  ██      ██    ██ ███████ ██   ██ █████   ██████  
 ██   ██ ██    ██ ██      ██      ██    ██ ██   ██ ██   ██ ██      ██   ██ 
 ██   ██  ██████  ██      ███████  ██████  ██   ██ ██████  ███████ ██   ██ 
+==========================================================================
 [/bold rgb(0,255,255)]
 """
 
