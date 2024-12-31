@@ -6,8 +6,7 @@ from rich.panel import Panel
 from rich.box import ROUNDED
 from rich.prompt import Prompt
 from rich.table import Table
-from rich.text import Text
-from rich.layout import Layout
+from rich.progress import Progress
 import requests
 from datetime import datetime
 
@@ -22,7 +21,7 @@ INSTALL_PACKAGES_ASCII = """
 ███████ ██████  ███████ ██      █████   ███████ ██   ███ █████   ███████ 
 ██   ██ ██      ██   ██ ██      ██  ██  ██   ██ ██    ██ ██           ██ 
 ██   ██ ██      ██   ██  ██████ ██   ██ ██   ██  ██████  ███████ ███████ 
-=========================================================================
+-------------------------------------------------------------------------
 [/bold rgb(0,255,255)]
 """
 
@@ -61,7 +60,7 @@ AUPLOADER_ASCII = """
 ███████ ██    ██ ██████  ██      ██    ██ ███████ ██   ██ █████   ██████  
 ██   ██ ██    ██ ██      ██      ██    ██ ██   ██ ██   ██ ██      ██   ██ 
 ██   ██  ██████  ██      ███████  ██████  ██   ██ ██████  ███████ ██   ██ 
-==========================================================================
+--------------------------------------------------------------------------
 [/bold rgb(0,255,255)]
 """
 
@@ -81,6 +80,7 @@ LANGUAGES = {
         "menu_title": "🚀 File Upload Menu",
         "menu_options": ["Upload a file", "View upload history", "Clear history", "Exit"],
         "enter_file_path": "📂 Enter the file path",
+        "choose_service": "🌐 Choose the upload service (1: GoFile, 2: BashUpload)",
         "press_enter": "Press [Enter] to return to the menu",
         "exiting": "🚀 Exiting... Goodbye!",
     },
@@ -95,6 +95,7 @@ LANGUAGES = {
         "menu_title": "🚀 Menu de Upload de Arquivos",
         "menu_options": ["Fazer upload de um arquivo", "Ver histórico de uploads", "Limpar histórico", "Sair"],
         "enter_file_path": "📂 Digite o caminho do arquivo",
+        "choose_service": "🌐 Escolha o serviço de upload (1: GoFile, 2: BashUpload)",
         "press_enter": "Pressione [Enter] para voltar ao menu",
         "exiting": "🚀 Saindo... Adeus!",
     },
@@ -109,6 +110,7 @@ LANGUAGES = {
         "menu_title": "🚀 Menú de Subida de Archivos",
         "menu_options": ["Subir un archivo", "Ver historial de subidas", "Borrar historial", "Salir"],
         "enter_file_path": "📂 Ingrese la ruta del archivo",
+        "choose_service": "🌐 Elija el servicio de subida (1: GoFile, 2: BashUpload)",
         "press_enter": "Presione [Enter] para volver al menú",
         "exiting": "🚀 Saliendo... ¡Adiós!",
     },
@@ -123,6 +125,7 @@ LANGUAGES = {
         "menu_title": "🚀 Меню Загрузки Файлов",
         "menu_options": ["Загрузить файл", "Просмотреть историю загрузок", "Очистить историю", "Выход"],
         "enter_file_path": "📂 Введите путь к файлу",
+        "choose_service": "🌐 Выберите сервис загрузки (1: GoFile, 2: BashUpload)",
         "press_enter": "Нажмите [Enter], чтобы вернуться в меню",
         "exiting": "🚀 Выход... До свидания!",
     },
@@ -137,81 +140,111 @@ LANGUAGES = {
         "menu_title": "🚀 Меню Завантаження Файлів",
         "menu_options": ["Завантажити файл", "Переглянути історію завантажень", "Очистити історію", "Вийти"],
         "enter_file_path": "📂 Введіть шлях до файлу",
+        "choose_service": "🌐 Виберіть сервіс завантаження (1: GoFile, 2: BashUpload)",
         "press_enter": "Натисніть [Enter], щоб повернутися до меню",
         "exiting": "🚀 Виходжу... До побачення!",
     },
 }
 
-def upload_file(file_path, language):
-    """Faz o upload do arquivo para o GoFile."""
-    try:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(LANGUAGES[language]["file_not_found"])
-        
+class FileUploader:
+    """Classe para gerenciar o upload de arquivos."""
+
+    def __init__(self, language):
+        self.language = language
+
+    def upload_to_gofile(self, file_path):
+        """Faz o upload do arquivo para o GoFile."""
         url = "https://store1.gofile.io/uploadFile"
         with open(file_path, "rb") as file:
             response = requests.post(url, files={"file": file})
-        
         if response.status_code == 200:
-            download_link = response.json()["data"]["downloadPage"]
-            console.print(Panel.fit(
-                f"[green]{LANGUAGES[language]['upload_success']}[/green]\n[blue]{download_link}[/blue]",
-                title="Success", box=ROUNDED
-            ))
-            
-            log_entry = f"{datetime.now()} - File: {file_path} - Link: {download_link}\n"
-            with open(LOG_FILE, "a") as log:
-                log.write(log_entry)
+            return response.json()["data"]["downloadPage"]  # Retorna o link de download
         else:
             raise Exception(f"Error {response.status_code}: {response.text}")
-    except Exception as e:
-        console.print(Panel.fit(
-            f"[red]{LANGUAGES[language]['upload_error']} {e}[/red]",
-            title="Error", box=ROUNDED
-        ))
-    Prompt.ask(f"\n{LANGUAGES[language]['press_enter']}")
 
-def show_logs(language):
-    """Exibe o histórico de uploads."""
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "r") as log:
-            logs = log.readlines()
-            if logs:
-                table = Table(title=LANGUAGES[language]["history_title"], show_header=True, header_style="bold magenta", box=ROUNDED)
-                table.add_column("Date and Time", style="dim")
-                table.add_column("File")
-                table.add_column("Link")
-                for entry in logs:
-                    parts = entry.strip().split(" - ")
-                    if len(parts) == 3:
-                        table.add_row(parts[0], parts[1], parts[2])
-                console.print(table)
-            else:
+    def upload_to_bashupload(self, file_path):
+        """Faz o upload do arquivo para o BashUpload."""
+        url = "https://bashupload.com/"
+        with open(file_path, "rb") as file:
+            response = requests.post(url, files={"file": file})
+        if response.status_code == 200:
+            # Retorna a mensagem original do BashUpload
+            return response.text.strip()
+        else:
+            raise Exception(f"Error {response.status_code}: {response.text}")
+
+    def upload_file(self, file_path, service):
+        """Faz o upload do arquivo para o serviço selecionado."""
+        try:
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(LANGUAGES[self.language]["file_not_found"])
+            
+            if service == "1":
+                download_link = self.upload_to_gofile(file_path)
                 console.print(Panel.fit(
-                    f"[yellow]{LANGUAGES[language]['no_records']}[/yellow]",
-                    title="Warning", box=ROUNDED
+                    f"[green]{LANGUAGES[self.language]['upload_success']}[/green]\n[blue]{download_link}[/blue]",
+                    title="Success", box=ROUNDED
                 ))
-    else:
-        console.print(Panel.fit(
-            f"[yellow]{LANGUAGES[language]['no_records']}[/yellow]",
-            title="Warning", box=ROUNDED
-        ))
-    Prompt.ask(f"\n{LANGUAGES[language]['press_enter']}")
+            elif service == "2":
+                bashupload_message = self.upload_to_bashupload(file_path)
+                console.print(Panel.fit(
+                    f"[green]{bashupload_message}[/green]",
+                    title="Success", box=ROUNDED
+                ))
+            else:
+                raise ValueError("Invalid service selected.")
+            
+            log_entry = f"{datetime.now()} - File: {file_path} - Link: {download_link if service == '1' else bashupload_message}\n"
+            with open(LOG_FILE, "a") as log:
+                log.write(log_entry)
+        except Exception as e:
+            console.print(Panel.fit(
+                f"[red]{LANGUAGES[self.language]['upload_error']} {e}[/red]",
+                title="Error", box=ROUNDED
+            ))
+        Prompt.ask(f"\n{LANGUAGES[self.language]['press_enter']}")
 
-def clear_logs(language):
-    """Limpa o histórico de uploads."""
-    if os.path.exists(LOG_FILE):
-        os.remove(LOG_FILE)
-        console.print(Panel.fit(
-            f"[green]{LANGUAGES[language]['history_cleared']}[/green]",
-            title="Success", box=ROUNDED
-        ))
-    else:
-        console.print(Panel.fit(
-            f"[yellow]{LANGUAGES[language]['no_records']}[/yellow]",
-            title="Warning", box=ROUNDED
-        ))
-    Prompt.ask(f"\n{LANGUAGES[language]['press_enter']}")
+    def show_logs(self):
+        """Exibe o histórico de uploads."""
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, "r") as log:
+                logs = log.readlines()
+                if logs:
+                    table = Table(title=LANGUAGES[self.language]["history_title"], show_header=True, header_style="bold magenta", box=ROUNDED)
+                    table.add_column("Date and Time", style="dim")
+                    table.add_column("File")
+                    table.add_column("Link")
+                    for entry in logs:
+                        parts = entry.strip().split(" - ")
+                        if len(parts) == 3:
+                            table.add_row(parts[0], parts[1], parts[2])
+                    console.print(table)
+                else:
+                    console.print(Panel.fit(
+                        f"[yellow]{LANGUAGES[self.language]['no_records']}[/yellow]",
+                        title="Warning", box=ROUNDED
+                    ))
+        else:
+            console.print(Panel.fit(
+                f"[yellow]{LANGUAGES[self.language]['no_records']}[/yellow]",
+                title="Warning", box=ROUNDED
+            ))
+        Prompt.ask(f"\n{LANGUAGES[self.language]['press_enter']}")
+
+    def clear_logs(self):
+        """Limpa o histórico de uploads."""
+        if os.path.exists(LOG_FILE):
+            os.remove(LOG_FILE)
+            console.print(Panel.fit(
+                f"[green]{LANGUAGES[self.language]['history_cleared']}[/green]",
+                title="Success", box=ROUNDED
+            ))
+        else:
+            console.print(Panel.fit(
+                f"[yellow]{LANGUAGES[self.language]['no_records']}[/yellow]",
+                title="Warning", box=ROUNDED
+            ))
+        Prompt.ask(f"\n{LANGUAGES[self.language]['press_enter']}")
 
 def select_language():
     """Permite ao usuário selecionar o idioma."""
@@ -240,6 +273,7 @@ def select_language():
 def main_menu():
     """Exibe o menu principal."""
     language = select_language()
+    uploader = FileUploader(language)
     
     while True:
         console.clear()
@@ -254,7 +288,8 @@ def main_menu():
         if choice == "1":
             file_path = Prompt.ask(LANGUAGES[language]["enter_file_path"])
             if os.path.exists(file_path):
-                upload_file(file_path, language)
+                service = Prompt.ask(LANGUAGES[language]["choose_service"], choices=["1", "2"])
+                uploader.upload_file(file_path, service)
             else:
                 console.print(Panel.fit(
                     f"[red]{LANGUAGES[language]['file_not_found']}[/red]",
@@ -262,9 +297,9 @@ def main_menu():
                 ))
                 Prompt.ask(f"\n{LANGUAGES[language]['press_enter']}")
         elif choice == "2":
-            show_logs(language)
+            uploader.show_logs()
         elif choice == "3":
-            clear_logs(language)
+            uploader.clear_logs()
         elif choice == "4":
             console.print(Panel.fit(
                 f"[bold magenta]{LANGUAGES[language]['exiting']}[/bold magenta]",
