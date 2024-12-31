@@ -80,7 +80,7 @@ LANGUAGES = {
         "menu_title": "🚀 File Upload Menu",
         "menu_options": ["Upload a file", "View upload history", "Clear history", "Exit"],
         "enter_file_path": "📂 Enter the file path",
-        "choose_service": "🌐 Choose the upload service (1: GoFile, 2: BashUpload)",
+        "choose_service": "🌐 Choose the upload service (1: GoFile, 2: BashUpload, 3: File.io)",
         "press_enter": "Press [Enter] to return to the menu",
         "exiting": "🚀 Exiting... Goodbye!",
     },
@@ -95,7 +95,7 @@ LANGUAGES = {
         "menu_title": "🚀 Menu de Upload de Arquivos",
         "menu_options": ["Fazer upload de um arquivo", "Ver histórico de uploads", "Limpar histórico", "Sair"],
         "enter_file_path": "📂 Digite o caminho do arquivo",
-        "choose_service": "🌐 Escolha o serviço de upload (1: GoFile, 2: BashUpload)",
+        "choose_service": "🌐 Escolha o serviço de upload (1: GoFile, 2: BashUpload, 3: File.io)",
         "press_enter": "Pressione [Enter] para voltar ao menu",
         "exiting": "🚀 Saindo... Adeus!",
     },
@@ -110,7 +110,7 @@ LANGUAGES = {
         "menu_title": "🚀 Menú de Subida de Archivos",
         "menu_options": ["Subir un archivo", "Ver historial de subidas", "Borrar historial", "Salir"],
         "enter_file_path": "📂 Ingrese la ruta del archivo",
-        "choose_service": "🌐 Elija el servicio de subida (1: GoFile, 2: BashUpload)",
+        "choose_service": "🌐 Elija el servicio de subida (1: GoFile, 2: BashUpload, 3: File.io)",
         "press_enter": "Presione [Enter] para volver al menú",
         "exiting": "🚀 Saliendo... ¡Adiós!",
     },
@@ -125,7 +125,7 @@ LANGUAGES = {
         "menu_title": "🚀 Меню Загрузки Файлов",
         "menu_options": ["Загрузить файл", "Просмотреть историю загрузок", "Очистить историю", "Выход"],
         "enter_file_path": "📂 Введите путь к файлу",
-        "choose_service": "🌐 Выберите сервис загрузки (1: GoFile, 2: BashUpload)",
+        "choose_service": "🌐 Выберите сервис загрузки (1: GoFile, 2: BashUpload, 3: File.io)",
         "press_enter": "Нажмите [Enter], чтобы вернуться в меню",
         "exiting": "🚀 Выход... До свидания!",
     },
@@ -140,7 +140,7 @@ LANGUAGES = {
         "menu_title": "🚀 Меню Завантаження Файлів",
         "menu_options": ["Завантажити файл", "Переглянути історію завантажень", "Очистити історію", "Вийти"],
         "enter_file_path": "📂 Введіть шлях до файлу",
-        "choose_service": "🌐 Виберіть сервіс завантаження (1: GoFile, 2: BashUpload)",
+        "choose_service": "🌐 Виберіть сервіс завантаження (1: GoFile, 2: BashUpload, 3: File.io)",
         "press_enter": "Натисніть [Enter], щоб повернутися до меню",
         "exiting": "🚀 Виходжу... До побачення!",
     },
@@ -173,6 +173,16 @@ class FileUploader:
         else:
             raise Exception(f"Error {response.status_code}: {response.text}")
 
+    def upload_to_fileio(self, file_path):
+        """Faz o upload do arquivo para o File.io."""
+        url = "https://file.io/"
+        with open(file_path, "rb") as file:
+            response = requests.post(url, files={"file": file})
+        if response.status_code == 200:
+            return response.json()["link"]  # Retorna o link de download
+        else:
+            raise Exception(f"Error {response.status_code}: {response.text}")
+
     def upload_file(self, file_path, service):
         """Faz o upload do arquivo para o serviço selecionado."""
         try:
@@ -191,10 +201,16 @@ class FileUploader:
                     f"[green]{bashupload_message}[/green]",
                     title="Success", box=ROUNDED
                 ))
+            elif service == "3":
+                download_link = self.upload_to_fileio(file_path)
+                console.print(Panel.fit(
+                    f"[green]{LANGUAGES[self.language]['upload_success']}[/green]\n[blue]{download_link}[/blue]",
+                    title="Success", box=ROUNDED
+                ))
             else:
                 raise ValueError("Invalid service selected.")
             
-            log_entry = f"{datetime.now()} - File: {file_path} - Link: {download_link if service == '1' else bashupload_message}\n"
+            log_entry = f"{datetime.now()} - File: {file_path} - Link: {download_link if service in ['1', '3'] else bashupload_message}\n"
             with open(LOG_FILE, "a") as log:
                 log.write(log_entry)
         except Exception as e:
@@ -288,7 +304,7 @@ def main_menu():
         if choice == "1":
             file_path = Prompt.ask(LANGUAGES[language]["enter_file_path"])
             if os.path.exists(file_path):
-                service = Prompt.ask(LANGUAGES[language]["choose_service"], choices=["1", "2"])
+                service = Prompt.ask(LANGUAGES[language]["choose_service"], choices=["1", "2", "3"])
                 uploader.upload_file(file_path, service)
             else:
                 console.print(Panel.fit(
