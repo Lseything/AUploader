@@ -55,6 +55,7 @@ The script requires the following Python packages to be installed:
 To install the required packages, run the following command:
 
 ```bash
+pip install datetime
 pip install requests
 pip install rich
 

@@ -21,7 +21,7 @@ INSTALL_PACKAGES_ASCII = """
 """
 
 # Lista de pacotes necessários
-REQUIRED_PACKAGES = ["requests", "rich"]
+REQUIRED_PACKAGES = ["requests", "rich", "datetime"]
 
 def install_packages():
     """Verifica e instala os pacotes necessários."""
